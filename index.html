@@ -185,13 +185,13 @@
   .search:focus { outline:2px solid #D9FF5C; outline-offset:1px; }
 
   .lhead {
-    display:grid; grid-template-columns:42px 1.6fr 1.3fr 96px 106px 34px; gap:12px;
+    display:grid; grid-template-columns:34px 42px 1.5fr 1.2fr 92px 100px 30px; gap:10px;
     padding:0 18px 10px;
     font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:0.1em; text-transform:uppercase;
     color:#8FA894; border-bottom:1px solid rgba(247,243,230,0.12);
   }
   .row {
-    display:grid; grid-template-columns:42px 1.6fr 1.3fr 96px 106px 34px; gap:12px;
+    display:grid; grid-template-columns:34px 42px 1.5fr 1.2fr 92px 100px 30px; gap:10px;
     align-items:center; padding:15px 18px;
     background-color:#07190F;
     border-bottom:1px solid rgba(247,243,230,0.12);
@@ -431,6 +431,27 @@
   .modal .yes {
     background-color:#F2A0A0; color:#07190F; border:none; font-weight:600;
   }
+
+  /* ---------- PLAYED TICK ---------- */
+  .tick {
+    display:inline-flex; align-items:center; justify-content:center;
+    width:22px; height:22px; border-radius:6px; flex-shrink:0; cursor:pointer;
+    border:1.5px solid #4F6B57; background-color:transparent;
+    color:transparent; font-size:13px; font-weight:700; line-height:1;
+    transition:all .12s ease;
+  }
+  .tick:hover, .tick:focus { border-color:#D9FF5C; outline:none; }
+  .tick.on { background-color:#D9FF5C; border-color:#D9FF5C; color:#07190F; }
+  .row .tick { justify-self:center; }
+  .mlist .tick { width:18px; height:18px; font-size:11px; border-radius:5px; }
+
+  .row.played .cn, .row.played .ly, .row.played .loc, .row.played .dt { opacity:0.55; }
+  .row.played .cn { text-decoration:line-through; text-decoration-color:#4F6B57; }
+  .badge.Played { background-color:#F7F3E6; color:#07190F; border:1px solid #F7F3E6; }
+  .cell.played { background-color:#F7F3E6; color:#07190F; }
+  .cell.played .pip { background-color:#07190F; }
+  .mlist .mdot.played { background-color:#F7F3E6; }
+  .legend i.pl { background-color:#F7F3E6; }
   .empty { padding:36px 18px; text-align:center; color:#8FA894; font-family:'JetBrains Mono',monospace; font-size:13px; background-color:#07190F; }
 
   /* ---------- FOOTER ---------- */
@@ -467,14 +488,14 @@
   <div class="wrap">
     <div class="prog-head">
       <h2>The Campaign</h2>
-      <div class="prog-count"><b id="done-n">0</b> / 50 played</div>
+      <div class="prog-count"><b id="done-n">0</b> of <span id="target-n">50</span> played<span class="over" id="over-tag"></span></div>
     </div>
     <div class="track"><div class="fill" id="fill" style="width:0%"></div></div>
     <div class="stats">
-      <div class="stat hi"><div class="k">Locked In</div><div class="v" id="s-locked">9</div></div>
-      <div class="stat"><div class="k">Proposed</div><div class="v" id="s-prop">41</div></div>
-      <div class="stat"><div class="k">Completed</div><div class="v" id="s-done">0</div></div>
-      <div class="stat"><div class="k">Days In Field</div><div class="v">365</div></div>
+      <div class="stat hi"><div class="k">Played</div><div class="v" id="s-done">0</div></div>
+      <div class="stat"><div class="k">Locked In</div><div class="v" id="s-locked">0</div></div>
+      <div class="stat"><div class="k">Proposed</div><div class="v" id="s-prop">0</div></div>
+      <div class="stat"><div class="k">Scheduled</div><div class="v" id="s-total">0</div></div>
     </div>
   </div>
 </section>
@@ -501,6 +522,7 @@
     <div class="legend" id="legend" style="display:none;">
       <span><i style="background-color:#D9FF5C"></i> Locked</span>
       <span><i style="background-color:#2C3A1E;border:1px solid #8A6C2A"></i> Proposed</span>
+      <span><i class="pl"></i> Played</span>
     </div>
     <div class="panel" id="panel">
       <h4>Add a round</h4>
@@ -634,12 +656,14 @@ function render(){
     const idx = CLUB_SEEN[course];
     const a=document.createElement('a');
     a.className='row'; a.href=url; a.target='_blank'; a.rel='noopener';
-    a.innerHTML=`<div class="no">${String(c[10]||no).padStart(2,'0')}</div>
+    if(c[11]) a.classList.add('played');
+    a.innerHTML=`<span class="tick ${c[11]?'on':''}" role="checkbox" aria-checked="${!!c[11]}" tabindex="0" data-play="${c[0]}" title="Mark as played">✓</span>
+      <div class="no">${String(c[10]||no).padStart(2,'0')}</div>
       <div><div class="cn">${multi ? course+' <span class="sep">·</span> '+layout : course}</div>
         <div class="ly">${multi ? '<span class="tag">Course '+idx+' of '+CLUB_N[course]+'</span>' : layout}${note?' · <b style="color:#F2C563">'+note+'</b>':''}</div></div>
       <div class="loc">${town}<span>${region}</span></div>
       <div class="dt">${fd(date)}</div>
-      <div class="badge ${status}">${status}</div>
+      <div class="badge ${c[11]?'Played':status}">${c[11]?'Played':status}</div>
       <span class="delrow" role="button" tabindex="0" data-del="${c[0]}" title="Remove round">×</span>`;
     listEl.appendChild(a);
   });
@@ -691,7 +715,7 @@ function renderCal(){
       const iso = y+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
       const hit = byDate[iso];
       if(hit){
-        const st = hit[0][7]==='Locked' ? 'locked' : 'proposed';
+        const st = hit[0][11] ? 'played' : (hit[0][7]==='Locked' ? 'locked' : 'proposed');
         const mv = hit[0][1]!==ORIG[hit[0][0]] ? ' moved' : '';
         cells += '<a class="cell has '+st+mv+'" data-iso="'+iso+'" data-no="'+hit[0][0]+'" href="'+hit[0][9]+'" target="_blank" rel="noopener" title="'+hit[0][2]+'">'
                + '<span class="dnum">'+d+'</span><span class="pip"></span></a>';
@@ -704,9 +728,10 @@ function renderCal(){
     if(inMonth.length){
       list = '<div class="mlist">' + inMonth.map(r=>{
         const dd = new Date(r[1]+"T00:00:00");
-        const st = r[7]==='Locked' ? 'locked' : 'proposed';
+        const st = r[11] ? 'played' : (r[7]==='Locked' ? 'locked' : 'proposed');
         const nm = CLUB_N[r[2]]>1 ? r[2]+' · '+r[3] : r[2];
         return '<a href="'+r[9]+'" target="_blank" rel="noopener">'
+             + '<span class="tick '+(r[11]?'on':'')+'" role="checkbox" tabindex="0" data-play="'+r[0]+'" title="Mark as played">✓</span>'
              + '<span class="mdot '+st+'"></span>'
              + '<span class="md">'+dd.getDate()+'/'+(dd.getMonth()+1)+'</span>'
              + '<span class="mn">'+nm+'</span>'
@@ -744,9 +769,9 @@ function byNo(no){ return C.find(c=>c[0]===Number(no)); }
 function resequence(){
   C.sort((a,b)=> a[1]<b[1] ? -1 : a[1]>b[1] ? 1 : 0);
   // keep the stable id in slot 0 — renumber a display index instead
-  C.forEach((c,i)=>{ c[10] = i+1; });
+  C.forEach((c,i)=>{ c[10] = i+1; if(c[11]===undefined) c[11] = false; });
 }
-C.forEach((c,i)=>{ c[10] = i+1; });
+C.forEach((c,i)=>{ c[10] = i+1; if(c[11]===undefined) c[11] = false; });
 
 function applyMove(no, targetIso){
   const src = byNo(no);
@@ -851,7 +876,16 @@ calEl.addEventListener('click', e => {
   if(c && c.dataset.justDragged){ e.preventDefault(); }
 }, true);
 
+function togglePlayed(no){
+  const row = C.find(c=>c[0]===Number(no));
+  if(!row) return;
+  row[11] = !row[11];
+  draw(); refreshStats();
+  toast(row[11] ? 'Played: '+row[2] : 'Unmarked: '+row[2]);
+}
 document.addEventListener('click', e => {
+  const t = e.target.closest('[data-play]');
+  if(t){ e.preventDefault(); e.stopPropagation(); togglePlayed(t.dataset.play); return; }
   const b = e.target.closest('[data-del]');
   if(!b) return;
   e.preventDefault(); e.stopPropagation();
@@ -859,13 +893,15 @@ document.addEventListener('click', e => {
 }, true);
 document.addEventListener('keydown', e => {
   if(e.key!=='Enter' && e.key!==' ') return;
+  const t = e.target.closest && e.target.closest('[data-play]');
+  if(t){ e.preventDefault(); togglePlayed(t.dataset.play); return; }
   const b = e.target.closest && e.target.closest('[data-del]');
   if(!b) return;
   e.preventDefault(); removeRound(b.dataset.del);
 });
 // a delete tap must never start a calendar drag
 calEl.addEventListener('pointerdown', e => {
-  if(e.target.closest('[data-del]')) e.stopPropagation();
+  if(e.target.closest('[data-del]') || e.target.closest('[data-play]')) e.stopPropagation();
 }, true);
 
 document.getElementById('btn-reset').addEventListener('click', ()=>{
@@ -875,10 +911,10 @@ document.getElementById('btn-reset').addEventListener('click', ()=>{
 });
 
 document.getElementById('btn-export').addEventListener('click', ()=>{
-  const head = ['No','Date','Club','Course','Town','Region','State','Status','Note','Moved'];
+  const head = ['No','Date','Club','Course','Town','Region','State','Status','Note','Moved','Played'];
   const lines = [head.join(',')].concat(C.map(c=>{
     const moved = c[1]!==ORIG[c[0]] ? 'YES' : '';
-    return [c[10], c[1], c[2], c[3], c[4], c[5], c[6], c[7], c[8], moved]
+    return [c[10], c[1], c[2], c[3], c[4], c[5], c[6], c[7], c[8], moved, c[11]?'YES':'']
       .map(v => '"'+String(v).replace(/"/g,'""')+'"').join(',');
   }));
   const blob = new Blob([lines.join('\n')], {type:'text/csv'});
@@ -988,19 +1024,22 @@ document.addEventListener('keydown', e => {
 });
 
 function refreshStats(){
-  const locked = C.filter(c=>c[7]==='Locked').length;
-  const prop   = C.filter(c=>c[7]==='Proposed').length;
-  const done   = C.filter(c=>c[7]==='Completed').length;
+  const total  = C.length;
+  const played = C.filter(c=>c[11]).length;
+  const locked = C.filter(c=>c[7]==='Locked' && !c[11]).length;
+  const prop   = C.filter(c=>c[7]==='Proposed' && !c[11]).length;
+
+  F('s-done').textContent   = played;
   F('s-locked').textContent = locked;
   F('s-prop').textContent   = prop;
-  F('s-done').textContent   = done;
-  F('done-n').textContent   = done;
-  F('fill').style.width = Math.min(100,(done/TARGET)*100) + '%';
-  const cEl = document.querySelector('.prog-count');
-  let tag = cEl.querySelector('.over');
-  if(!tag){ tag = document.createElement('span'); tag.className='over'; cEl.appendChild(tag); }
-  const diff = C.length - TARGET;
-  tag.textContent = diff === 0 ? '' : (diff > 0 ? '  ·  ' + diff + ' over 50' : '  ·  ' + (-diff) + ' short of 50');
+  F('s-total').textContent  = total;
+  F('done-n').textContent   = played;
+  F('target-n').textContent = TARGET;
+  F('fill').style.width = Math.min(100,(played/TARGET)*100) + '%';
+
+  const diff = total - TARGET;
+  F('over-tag').textContent = diff === 0 ? ''
+    : (diff > 0 ? '  ·  ' + diff + ' over target' : '  ·  ' + (-diff) + ' short of target');
 }
 
 function setView(v){
@@ -1029,14 +1068,6 @@ document.querySelectorAll('.chip').forEach(ch=>{
 document.getElementById('q').addEventListener('input',e=>{ q=e.target.value.trim().toLowerCase(); draw(); });
 render();
 
-const locked=C.filter(c=>c[7]==='Locked').length;
-const prop=C.filter(c=>c[7]==='Proposed').length;
-const done=0;
-document.getElementById('s-locked').textContent=locked;
-document.getElementById('s-prop').textContent=prop;
-document.getElementById('s-done').textContent=done;
-document.getElementById('done-n').textContent=done;
-document.getElementById('fill').style.width=((done/50)*100)+'%';
 refreshStats();
 
 const start=new Date("2026-08-28T00:00:00"), fin=new Date("2027-08-27T00:00:00"), now=new Date(), DAY=86400000;
