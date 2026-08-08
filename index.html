@@ -51,7 +51,7 @@
     background-image:
       radial-gradient(ellipse 900px 520px at 6% -12%, rgba(217,255,92,0.10), rgba(7,25,15,0) 62%),
       radial-gradient(ellipse 760px 520px at 104% 4%, rgba(217,169,74,0.16), rgba(7,25,15,0) 58%);
-    padding:76px 0 60px;
+    padding:64px 0 44px;
     border-bottom:1px solid rgba(247,243,230,0.12);
   }
 
@@ -127,6 +127,7 @@
   @media(max-width:700px){
     .facts { grid-template-columns:repeat(2,1fr); row-gap:16px; }
     .facts .f:nth-child(2){ border-right:none; }
+    .facts .f:last-child{ border-right:none; }
   }
 
   /* ---------- SECTION SHELL ---------- */
@@ -499,6 +500,46 @@
     padding:40px 20px; text-align:center; color:#8FA894;
     font-family:'JetBrains Mono',monospace; font-size:12.5px;
   }
+
+  /* ---------- CAMPAIGN TRACKER ---------- */
+  .camp {
+    background-color:#07190F; padding:34px 0 30px;
+    border-bottom:1px solid rgba(247,243,230,0.12);
+  }
+  .camp-top { display:flex; align-items:flex-end; gap:20px; flex-wrap:wrap; margin-bottom:16px; }
+  .camp-score { display:flex; align-items:baseline; line-height:0.85; }
+  .camp-score .big {
+    font-family:'Fraunces',Georgia,serif; font-weight:700;
+    font-size:clamp(56px,10vw,96px); color:#D9FF5C; letter-spacing:-0.03em;
+  }
+  .camp-score .slash {
+    font-family:'Fraunces',Georgia,serif; font-weight:600;
+    font-size:clamp(30px,5vw,48px); color:#4F6B57; margin:0 4px;
+  }
+  .camp-score .tgt {
+    font-family:'Fraunces',Georgia,serif; font-weight:600;
+    font-size:clamp(30px,5vw,48px); color:#8FA894;
+  }
+  .camp-meta { padding-bottom:6px; }
+  .camp-lbl {
+    font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:0.16em;
+    text-transform:uppercase; color:#C6D4C2;
+  }
+  .camp-dates {
+    font-family:'JetBrains Mono',monospace; font-size:11.5px;
+    color:#8FA894; margin-top:7px;
+  }
+  .camp-dates b { color:#F2C563; }
+  .pills { display:flex; gap:8px; flex-wrap:wrap; margin-top:16px; }
+  .pst {
+    font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:0.05em;
+    text-transform:uppercase; color:#8FA894;
+    border:1px solid rgba(247,243,230,0.14); border-radius:16px; padding:6px 13px;
+  }
+  .pst b { color:#F7F3E6; font-size:13px; font-weight:500; }
+  .pst.hi { border-color:rgba(217,255,92,0.4); }
+  .pst.hi b { color:#D9FF5C; }
+  .camp .track { height:8px; }
   .empty { padding:36px 18px; text-align:center; color:#8FA894; font-family:'JetBrains Mono',monospace; font-size:13px; background-color:#07190F; }
 
   /* ---------- FOOTER ---------- */
@@ -521,28 +562,27 @@
         <p class="sub rise d4">An epic golf year, from Newport to Scotland the journey will be one for the ages and a perfect way to celebrate a milestone birthday.</p>
       </div>
     </div>
-    <div class="facts rise d4" style="margin-top:44px;">
-      <div class="f"><div class="k">Starts</div><div class="v">1 Aug <span>2026</span></div></div>
-      <div class="f"><div class="k">Opens At</div><div class="v">Gleneagles</div></div>
-      <div class="f"><div class="k">Ends</div><div class="v">31 Jul <span>2027</span></div></div>
-      <div class="f"><div class="k" id="cd-k">Days To Go</div><div class="v" id="cd-v">—</div></div>
-    </div>
   </div>
 </section>
 
 <!-- PROGRESS -->
-<section class="band sec">
+<section class="band camp">
   <div class="wrap">
-    <div class="prog-head">
-      <h2>The Campaign</h2>
-      <div class="prog-count"><b id="done-n">0</b> of <span id="target-n">50</span> played<span class="over" id="over-tag"></span></div>
+    <div class="camp-top">
+      <div class="camp-score">
+        <span class="big" id="done-n">0</span><span class="slash">/</span><span class="tgt" id="target-n">50</span>
+      </div>
+      <div class="camp-meta">
+        <div class="camp-lbl">Rounds played<span class="over" id="over-tag"></span></div>
+        <div class="camp-dates">1 Aug 2026 &rarr; 31 Jul 2027 &nbsp;·&nbsp; <b id="cd-v">—</b> <span id="cd-k">days to go</span></div>
+      </div>
     </div>
     <div class="track"><div class="fill" id="fill" style="width:0%"></div></div>
-    <div class="stats">
-      <div class="stat hi"><div class="k">Played</div><div class="v" id="s-done">0</div></div>
-      <div class="stat"><div class="k">Locked In</div><div class="v" id="s-locked">0</div></div>
-      <div class="stat"><div class="k">Proposed</div><div class="v" id="s-prop">0</div></div>
-      <div class="stat"><div class="k">Scheduled</div><div class="v" id="s-total">0</div></div>
+    <div class="pills">
+      <span class="pst hi"><b id="s-done">0</b> played</span>
+      <span class="pst"><b id="s-locked">0</b> locked in</span>
+      <span class="pst"><b id="s-prop">0</b> proposed</span>
+      <span class="pst"><b id="s-total">0</b> scheduled</span>
     </div>
   </div>
 </section>
