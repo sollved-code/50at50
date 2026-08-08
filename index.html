@@ -164,7 +164,7 @@
   /* ---------- COURSES ---------- */
   .controls {
     display:flex; gap:10px; flex-wrap:wrap; align-items:center;
-    margin:28px 0 22px; padding-bottom:22px;
+    margin:18px 0 22px; padding-bottom:22px;
     border-bottom:1px solid rgba(247,243,230,0.12);
   }
   .chip {
@@ -231,6 +231,10 @@
 
 
   /* ---------- VIEW TOGGLE ---------- */
+  .viewbar {
+    display:flex; margin:28px 0 0;
+    padding-bottom:18px; border-bottom:1px solid rgba(247,243,230,0.12);
+  }
   .vtoggle { display:inline-flex; border:1px solid rgba(247,243,230,0.18); border-radius:20px; overflow:hidden; }
   .vtoggle button {
     font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:0.08em; text-transform:uppercase;
@@ -550,17 +554,20 @@
     <h2>The Full Fifty</h2>
     <p class="lede">Every course in playing order. Locked rounds are confirmed; proposed are working targets. Switch to Calendar to drag dates around, or Map to see what else is out there.</p>
 
+    <div class="viewbar">
+      <div class="vtoggle">
+        <button id="v-list" class="on">List</button>
+        <button id="v-cal">Calendar</button>
+        <button id="v-map">Map</button>
+      </div>
+    </div>
+
     <div class="controls" id="coursebar">
       <button class="chip on" data-f="All">All 50</button>
       <button class="chip" data-f="Locked">Locked</button>
       <button class="chip" data-f="Proposed">Proposed</button>
       <input class="search" id="q" type="text" placeholder="Search course or region…">
       <button class="addbtn" id="btn-add" style="margin-left:10px;">+ Add round</button>
-      <div class="vtoggle" style="margin-left:10px;">
-        <button id="v-list" class="on">List</button>
-        <button id="v-cal">Calendar</button>
-        <button id="v-map">Map</button>
-      </div>
     </div>
 
     <div class="legend" id="legend" style="display:none;">
