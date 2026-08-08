@@ -548,9 +548,9 @@
 <section class="band sec" style="border-bottom:none; padding-bottom:80px;">
   <div class="wrap">
     <h2>The Full Fifty</h2>
-    <p class="lede">Every course in playing order. Locked rounds are confirmed; proposed rounds are working targets and can be swapped freely.</p>
+    <p class="lede">Every course in playing order. Locked rounds are confirmed; proposed are working targets. Switch to Calendar to drag dates around, or Map to see what else is out there.</p>
 
-    <div class="controls">
+    <div class="controls" id="coursebar">
       <button class="chip on" data-f="All">All 50</button>
       <button class="chip" data-f="Locked">Locked</button>
       <button class="chip" data-f="Proposed">Proposed</button>
@@ -559,6 +559,7 @@
       <div class="vtoggle" style="margin-left:10px;">
         <button id="v-list" class="on">List</button>
         <button id="v-cal">Calendar</button>
+        <button id="v-map">Map</button>
       </div>
     </div>
 
@@ -592,35 +593,29 @@
       <span class="hint">Drag any round to another day. Drop on a booked day to swap.</span>
     </div>
     <div id="cal" class="cal" style="display:none;"></div>
+    <div id="mapwrap" style="display:none;">
+      <div class="controls" style="border-bottom:none; margin-bottom:0; padding-bottom:0;">
+        <button class="chip on" data-mf="All">All</button>
+        <button class="chip" data-mf="Public">Public access</button>
+        <button class="chip" data-mf="Private">Private</button>
+        <button class="chip" data-mf="Near">Within 100km</button>
+        <button class="chip" data-mf="On50">On my 50</button>
+      </div>
+      <div class="legend" style="display:flex; margin-top:18px; margin-bottom:0;">
+        <span><i style="background-color:#D9FF5C"></i> Public access</span>
+        <span><i style="background-color:#3A2E14;border:1px solid #8A6C2A"></i> Private club</span>
+        <span><i style="background-color:#F7F3E6"></i> On the 50</span>
+        <span style="color:#8FA894; text-transform:none; letter-spacing:0"><b id="pin-n" style="color:#F7F3E6">0</b>&nbsp;courses mapped across Victoria</span>
+      </div>
+      <div id="map"></div>
+    </div>
+
     <div class="lhead" id="lhead"><div>No.</div><div>Course</div><div>Location</div><div>Date</div><div>Status</div></div>
     <div id="list"></div>
     <div class="empty" id="empty" style="display:none;">No courses match that search.</div>
   </div>
 </section>
 
-
-<!-- COURSE MAP -->
-<section class="band sec" id="mapsec">
-  <div class="wrap">
-    <h2>Courses Near Home</h2>
-    <p class="lede">Every course within about 100km of Newport. Public-access venues you can book yourself, private clubs you'll need a member or an event for.</p>
-
-    <div class="controls" style="border-bottom:none; margin-bottom:0; padding-bottom:0;">
-      <button class="chip on" data-mf="All">All</button>
-      <button class="chip" data-mf="Public">Public access</button>
-      <button class="chip" data-mf="Private">Private</button>
-      <button class="chip" data-mf="On50">On my 50</button>
-    </div>
-
-    <div class="legend" style="display:flex; margin-top:18px; margin-bottom:0;">
-      <span><i style="background-color:#D9FF5C"></i> Public access</span>
-      <span><i style="background-color:#3A2E14;border:1px solid #8A6C2A"></i> Private club</span>
-      <span><i style="background-color:#F7F3E6"></i> On the 50</span>
-    </div>
-
-    <div id="map"></div>
-  </div>
-</section>
 
 <footer class="band foot">
   <div class="wrap">
@@ -1180,11 +1175,74 @@ const NEAR = [
 ["Ocean Grove Golf Course",-38.263037,144.509842,"Public",0],
 ["The Sands Torquay",-38.313511,144.346954,"Public",1],
 ["RACV Torquay Golf",-38.340508,144.311526,"Public",0],
-["Anglesea Golf Club",-38.406027,144.171027,"Public",1]
+["Anglesea Golf Club",-38.406027,144.171027,"Public",1],
+["Ballarat Golf Club",-37.547025,143.801504,"Public",0],
+["Midlands Golf Club, Ballarat",-37.527838,143.857492,"Public",0],
+["Mount Xavier Golf Course, Ballarat",-37.563185,143.900468,"Public",0],
+["Buninyong Golf Club",-37.648853,143.876057,"Public",0],
+["RACV Goldfields, Creswick",-37.444249,143.890966,"Public",0],
+["Bendigo Golf Club",-36.713426,144.322444,"Public",0],
+["Quarry Hill Golf Club, Bendigo",-36.776176,144.277954,"Public",0],
+["Neangar Park Golf Club, Eaglehawk",-36.713013,144.271347,"Public",0],
+["Axedale Golf Club",-36.794823,144.499526,"Public",0],
+["Belvoir Park Golf Club, Ravenswood",-36.861083,144.201059,"Public",0],
+["Castlemaine Golf Club",-37.080433,144.159225,"Public",0],
+["Mt Alexander Golf Club",-37.055548,144.224777,"Public",0],
+["Kyneton Golf Course",-37.234192,144.483215,"Public",0],
+["Woodend Golf Club",-37.349806,144.532736,"Public",0],
+["Mount Macedon Golf Club",-37.409837,144.583267,"Public",0],
+["Gisborne Golf Club",-37.496564,144.576338,"Public",0],
+["Lancefield Golf Club",-37.256272,144.723748,"Public",0],
+["Seymour Golf Club",-37.045029,145.170074,"Public",0],
+["Euroa Golf Club",-36.766247,145.560760,"Public",0],
+["Benalla Golf Club",-36.570825,145.960096,"Public",0],
+["Golden Vale Golf Club, Benalla",-36.573138,145.948388,"Public",0],
+["Shepparton Golf Club",-36.356571,145.367630,"Public",0],
+["Echuca Back Nine",-36.135529,144.741241,"Public",0],
+["Wangaratta Golf Club",-36.331040,146.294066,"Public",1],
+["Jubilee Golf Club, Wangaratta",-36.327131,146.220581,"Public",0],
+["Beechworth Golf Club",-36.348187,146.697689,"Public",0],
+["Rutherglen Golf Club",-36.053198,146.452535,"Public",0],
+["Wodonga Golf Club",-36.121845,146.846954,"Public",0],
+["Bright Golf Club",-36.709697,146.932908,"Public",1],
+["Mount Beauty Golf Club",-36.738711,147.177917,"Public",1],
+["Mildura Golf Resort",-34.178660,142.136514,"Public",0],
+["Horsham Golf Club",-36.748600,142.176849,"Public",0],
+["Stawell Golf Club",-37.034882,142.785271,"Public",0],
+["Chalambar Golf Club, Ararat",-37.269936,142.909424,"Public",0],
+["Hamilton Golf Club",-37.745883,142.039461,"Public",0],
+["Portland Golf Club",-38.369386,141.625428,"Public",0],
+["Port Fairy Golf Links",-38.359497,142.279633,"Public",0],
+["Warrnambool Golf Club",-38.388500,142.461203,"Public",0],
+["Timboon Golf Course",-38.475086,142.967346,"Public",0],
+["Colac Golf Club",-38.369911,143.574834,"Public",0],
+["Mount Martha Public Golf",-38.288185,145.023941,"Public",0],
+["Phillip Island Golf Club",-38.455780,145.255981,"Public",0],
+["Red Rocks Golf, Cowes",-38.456831,145.198799,"Public",0],
+["Lang Lang Golf Club",-38.337280,145.610990,"Public",0],
+["Korumburra Golf Club",-38.410297,145.811311,"Public",0],
+["Leongatha Golf Club",-38.570864,145.855648,"Public",0],
+["Meeniyan Golf Club",-38.610130,146.017656,"Public",0],
+["Drouin Golf & Country Club",-38.098803,145.836362,"Public",0],
+["Warragul Country Club",-38.150006,145.925289,"Public",0],
+["Yallourn Golf Club, Newborough",-38.179111,146.318203,"Public",0],
+["Traralgon Golf Club",-38.204333,146.509125,"Public",0],
+["Sale Golf Club, Longford",-38.161224,147.075494,"Public",0],
+["Loch Sport Golf Club",-38.057180,147.563809,"Public",0],
+["Bairnsdale Golf Club, Eagle Point",-37.902619,147.684371,"Public",0],
+["Metung Country Club",-37.879080,147.835774,"Public",0],
+["Lakes Entrance Golf Club",-37.871868,148.023422,"Public",0]
 ];
 const NEWPORT = [-37.8430, 144.8830];
 
 let map, layer, mapFilter = 'All';
+
+function kmFromHome(lat,lng){
+  const R=6371, rad=d=>d*Math.PI/180;
+  const dLat=rad(lat-NEWPORT[0]), dLng=rad(lng-NEWPORT[1]);
+  const a=Math.sin(dLat/2)**2 + Math.cos(rad(NEWPORT[0]))*Math.cos(rad(lat))*Math.sin(dLng/2)**2;
+  return 2*R*Math.asin(Math.sqrt(a));
+}
 
 function drawMarkers(){
   if(!layer) return;
@@ -1194,6 +1252,7 @@ function drawMarkers(){
     if(mapFilter === 'Public'  && access !== 'Public')  return;
     if(mapFilter === 'Private' && access !== 'Private') return;
     if(mapFilter === 'On50'    && !on50) return;
+    if(mapFilter === 'Near'    && kmFromHome(lat,lng) > 100) return;
 
     const fill   = on50 ? '#F7F3E6' : (access === 'Public' ? '#D9FF5C' : '#3A2E14');
     const stroke = on50 ? '#D9FF5C' : (access === 'Public' ? '#7FA82E' : '#8A6C2A');
@@ -1206,6 +1265,7 @@ function drawMarkers(){
       + '<span class="acc '+(access==='Public'?'pub':'priv')+'">'
       + (access==='Public' ? 'Public access' : 'Private club') + '</span>'
       + (on50 ? '<span class="on50">On the 50</span>' : '')
+      + '<span class="on50" style="color:#8FA894">'+Math.round(kmFromHome(lat,lng))+' km from Newport</span>'
     ).addTo(layer);
   });
 }
@@ -1216,7 +1276,7 @@ function initMap(){
       '<div class="mapfail">Map needs an internet connection to load.</div>';
     return;
   }
-  map = L.map('map', { scrollWheelZoom:false }).setView([-38.00, 144.90], 9);
+  map = L.map('map', { scrollWheelZoom:false }).setView([-37.30, 145.10], 7);
   L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
     attribution:'&copy; OpenStreetMap, &copy; CARTO', maxZoom:19
   }).addTo(map);
@@ -1233,6 +1293,7 @@ function initMap(){
   }).addTo(map);
 
   drawMarkers();
+  document.getElementById('pin-n').textContent = NEAR.length;
   setTimeout(()=>map.invalidateSize(), 250);
 }
 
@@ -1246,25 +1307,38 @@ document.querySelectorAll('[data-mf]').forEach(b => {
 });
 
 function setView(v){
-  view=v;
-  const isCal = v==='cal';
+  view = v;
+  const isCal = v==='cal', isMap = v==='map', isList = v==='list';
+
+  document.getElementById('v-list').classList.toggle('on', isList);
   document.getElementById('v-cal').classList.toggle('on', isCal);
-  document.getElementById('v-list').classList.toggle('on', !isCal);
-  calEl.style.display    = isCal ? 'grid' : 'none';
-  legendEl.style.display = isCal ? 'flex' : 'none';
+  document.getElementById('v-map').classList.toggle('on', isMap);
+
+  calEl.style.display     = isCal ? 'grid' : 'none';
+  legendEl.style.display  = isCal ? 'flex' : 'none';
   document.getElementById('calbar').style.display = isCal ? 'flex' : 'none';
-  listEl.style.display   = isCal ? 'none' : 'block';
-  lheadEl.style.display  = isCal ? 'none' : 'grid';
-  draw();
+  listEl.style.display    = isList ? 'block' : 'none';
+  lheadEl.style.display   = isList ? 'grid' : 'none';
+  document.getElementById('mapwrap').style.display = isMap ? 'block' : 'none';
+
+  // course filters + search apply to list and calendar only
+  document.getElementById('coursebar').style.display = isMap ? 'none' : 'flex';
+
+  if(isMap){
+    if(map){ setTimeout(()=>{ map.invalidateSize(); drawMarkers(); }, 60); }
+  } else {
+    draw();
+  }
 }
 document.getElementById('v-cal').addEventListener('click',()=>setView('cal'));
 document.getElementById('v-list').addEventListener('click',()=>setView('list'));
+document.getElementById('v-map').addEventListener('click',()=>setView('map'));
 
 function draw(){ if(view==='cal') renderCal(); else render(); }
 
-document.querySelectorAll('.chip').forEach(ch=>{
+document.querySelectorAll('[data-f]').forEach(ch=>{
   ch.addEventListener('click',()=>{
-    document.querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));
+    document.querySelectorAll('[data-f]').forEach(x=>x.classList.remove('on'));
     ch.classList.add('on'); filter=ch.dataset.f; draw();
   });
 });
