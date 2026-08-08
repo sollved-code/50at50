@@ -6,6 +6,7 @@
 <title>50 at 50 — Jason's Golf Year</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600;0,9..144,700;1,9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   * { box-sizing:border-box; margin:0; padding:0; }
@@ -321,6 +322,7 @@
     width:5px; height:5px; border-radius:50%; background-color:#F2C563;
   }
   .cell.has { position:relative; }
+  .cell.outside { outline:2px solid #F2A0A0; outline-offset:-2px; }
   .toast {
     position:fixed; left:50%; bottom:26px; transform:translateX(-50%);
     background-color:#0C2317; border:1px solid #D9FF5C; color:#F7F3E6;
@@ -452,6 +454,47 @@
   .cell.played .pip { background-color:#07190F; }
   .mlist .mdot.played { background-color:#F7F3E6; }
   .legend i.pl { background-color:#F7F3E6; }
+
+  /* ---------- COURSE MAP ---------- */
+  #map {
+    height:520px; width:100%; border-radius:12px; margin-top:22px;
+    border:1px solid rgba(247,243,230,0.16); background-color:#0C2317;
+  }
+  @media(max-width:700px){ #map { height:420px; } }
+  .leaflet-container { background-color:#0C2317 !important; font-family:'Inter',sans-serif; }
+  .leaflet-popup-content-wrapper {
+    background-color:#0C2317; color:#F7F3E6;
+    border:1px solid rgba(247,243,230,0.2); border-radius:10px;
+  }
+  .leaflet-popup-tip { background-color:#0C2317; }
+  .leaflet-popup-content { margin:12px 14px; font-size:13px; }
+  .leaflet-popup-content b {
+    font-family:'Fraunces',Georgia,serif; font-size:15px; display:block; margin-bottom:3px;
+  }
+  .leaflet-popup-content .acc {
+    font-family:'JetBrains Mono',monospace; font-size:9.5px; letter-spacing:0.1em;
+    text-transform:uppercase; display:inline-block; margin-top:6px;
+    padding:2px 7px; border-radius:9px;
+  }
+  .leaflet-popup-content .acc.pub { background-color:#D9FF5C; color:#07190F; }
+  .leaflet-popup-content .acc.priv { background-color:#3A2E14; color:#F2C563; border:1px solid #8A6C2A; }
+  .leaflet-popup-content .on50 {
+    display:block; margin-top:7px; color:#F2C563;
+    font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:0.06em; text-transform:uppercase;
+  }
+  .leaflet-control-attribution {
+    background-color:rgba(7,25,15,0.8) !important; color:#8FA894 !important; font-size:9px !important;
+  }
+  .leaflet-control-attribution a { color:#C6D4C2 !important; }
+  .leaflet-bar a {
+    background-color:#0C2317 !important; color:#F7F3E6 !important;
+    border-color:rgba(247,243,230,0.2) !important;
+  }
+  .leaflet-bar a:hover { background-color:#164329 !important; }
+  .mapfail {
+    padding:40px 20px; text-align:center; color:#8FA894;
+    font-family:'JetBrains Mono',monospace; font-size:12.5px;
+  }
   .empty { padding:36px 18px; text-align:center; color:#8FA894; font-family:'JetBrains Mono',monospace; font-size:13px; background-color:#07190F; }
 
   /* ---------- FOOTER ---------- */
@@ -475,9 +518,9 @@
       </div>
     </div>
     <div class="facts rise d4" style="margin-top:44px;">
-      <div class="f"><div class="k">Starts</div><div class="v">28 Aug <span>2026</span></div></div>
+      <div class="f"><div class="k">Starts</div><div class="v">1 Aug <span>2026</span></div></div>
       <div class="f"><div class="k">Opens At</div><div class="v">Gleneagles</div></div>
-      <div class="f"><div class="k">Finish</div><div class="v">Aug <span>2027</span></div></div>
+      <div class="f"><div class="k">Ends</div><div class="v">31 Jul <span>2027</span></div></div>
       <div class="f"><div class="k" id="cd-k">Days To Go</div><div class="v" id="cd-v">—</div></div>
     </div>
   </div>
@@ -527,7 +570,7 @@
     <div class="panel" id="panel">
       <h4>Add a round</h4>
       <div class="fgrid">
-        <div class="fld"><label>Date <span class="req">*</span></label><input type="date" id="f-date" min="2026-08-01" max="2027-12-31"></div>
+        <div class="fld"><label>Date <span class="req">*</span></label><input type="date" id="f-date" min="2026-08-01" max="2027-07-31"></div>
         <div class="fld"><label>Club <span class="req">*</span></label><input type="text" id="f-club" placeholder="e.g. Kingston Heath"></div>
         <div class="fld"><label>Course / Layout</label><input type="text" id="f-layout" placeholder="Main Course"></div>
         <div class="fld"><label>Town</label><input type="text" id="f-town" placeholder="Cheltenham"></div>
@@ -555,10 +598,34 @@
   </div>
 </section>
 
+
+<!-- COURSE MAP -->
+<section class="band sec" id="mapsec">
+  <div class="wrap">
+    <h2>Courses Near Home</h2>
+    <p class="lede">Every course within about 100km of Newport. Public-access venues you can book yourself, private clubs you'll need a member or an event for.</p>
+
+    <div class="controls" style="border-bottom:none; margin-bottom:0; padding-bottom:0;">
+      <button class="chip on" data-mf="All">All</button>
+      <button class="chip" data-mf="Public">Public access</button>
+      <button class="chip" data-mf="Private">Private</button>
+      <button class="chip" data-mf="On50">On my 50</button>
+    </div>
+
+    <div class="legend" style="display:flex; margin-top:18px; margin-bottom:0;">
+      <span><i style="background-color:#D9FF5C"></i> Public access</span>
+      <span><i style="background-color:#3A2E14;border:1px solid #8A6C2A"></i> Private club</span>
+      <span><i style="background-color:#F7F3E6"></i> On the 50</span>
+    </div>
+
+    <div id="map"></div>
+  </div>
+</section>
+
 <footer class="band foot">
   <div class="wrap">
     <div class="tag">The Ultimate Golf Experience Challenge</div>
-    <div class="fine">50 at 50 · 12 months · Aug 2026 – Aug 2027</div>
+    <div class="fine">50 at 50 · 12 months · 1 Aug 2026 – 31 Jul 2027</div>
   </div>
 </footer>
 <div class="toast" id="toast"></div>
@@ -575,56 +642,56 @@
 
 <script>
 const C = [
-[1,"2026-08-28","Gleneagles","The King's Course","Auchterarder","Scotland Opening","Scotland, UK","Locked","","https://gleneagles.com/golf/the-kings/"],
-[2,"2026-08-29","Gleneagles","The Queen's Course","Auchterarder","Scotland Opening","Scotland, UK","Locked","","https://gleneagles.com/golf/the-queens/"],
-[3,"2026-08-30","Gleneagles","PGA Centenary Course","Auchterarder","Scotland Opening","Scotland, UK","Locked","","https://gleneagles.com/golf/the-pga-centenary/"],
-[4,"2026-09-20","Waterford Valley Golf","Championship Course","Knoxfield","Melbourne East","Victoria","Locked","","https://www.wvgolf.com.au/"],
-[5,"2026-09-26","Sanctuary Lakes Golf Club","Greg Norman Course","Point Cook","Melbourne West","Victoria","Proposed","","https://www.sanctuarylakesclub.com.au/"],
-[6,"2026-10-01","Mt Beauty Golf Club","Main Course","Mount Beauty","Bright Week","Victoria","Locked","Bright week","https://www.golf.org.au/"],
-[7,"2026-10-02","Myrtleford Golf Club","Main Course","Myrtleford","Bright Week","Victoria","Locked","Bright week","https://www.golf.org.au/"],
-[8,"2026-10-03","Bright Country Golf Club","Main Course","Porepunkah / Bright","Bright Week","Victoria","Locked","Bright week","https://www.brightgolf.org.au/"],
-[9,"2026-10-08","Metropolitan Golf Club","Championship Course","Oakleigh South","Melbourne Sandbelt","Victoria","Locked","","https://www.metropolitangolf.com.au/"],
-[10,"2026-10-10","Yarra Bend Golf","Public Course","Fairfield","Melbourne Inner","Victoria","Proposed","","https://yarrabendgolf.com/"],
-[11,"2026-10-11","Albert Park Golf Course","Public Course","Albert Park","Melbourne Inner","Victoria","Proposed","","https://www.albertparkgolf.com.au/"],
-[12,"2026-10-22","Lonsdale Links","Main Course","Point Lonsdale","Bellarine Weekender","Victoria","Locked","Stableford","https://www.lonsdalelinks.com.au/cms/golf/green-fees/"],
-[13,"2026-10-23","Portarlington Golf Club","Main Course","Portarlington","Bellarine Weekender","Victoria","Locked","Ambrose","https://www.port.golf/play"],
-[14,"2026-10-24","13th Beach Golf Links","Creek Course","Barwon Heads","Bellarine Weekender","Victoria","Locked","Stroke · Round 1","https://13thbeachgolf.com/explore-our-courses/the-creek-course/"],
-[15,"2026-10-25","Curlewis Golf Club","Main Course","Curlewis","Bellarine Weekender","Victoria","Locked","Stroke · Round 2","https://curlewisgolf.com.au/pages/green-fees"],
-[16,"2026-11-07","St Andrews Beach Golf Course","Main Course","St Andrews Beach","Mornington Peninsula","Victoria","Proposed","","https://standrewsbeachgolf.com.au/"],
-[17,"2026-11-08","The Dunes Golf Links","Dunes Course","Rye","Mornington Peninsula","Victoria","Proposed","","https://thedunes.com.au/"],
-[18,"2026-11-14","Moonah Links","Open Course","Fingal","Mornington Peninsula","Victoria","Proposed","","https://www.moonahlinks.com.au/"],
-[19,"2026-11-15","Moonah Links","Legends Course","Fingal","Mornington Peninsula","Victoria","Proposed","","https://www.moonahlinks.com.au/"],
-[20,"2026-11-20","Wangaratta Golf Club","Main Course","Wangaratta","Albury Border Trip","Victoria","Proposed","","https://www.golf.org.au/"],
-[21,"2026-11-21","Thurgoona Country Club Resort","Main Course","Thurgoona","Albury Border Trip","NSW","Proposed","","https://www.golf.org.au/"],
-[22,"2026-11-22","Corowa Golf Club","Main Course","Corowa","Albury Border Trip","NSW","Proposed","3rd Albury course — swap if preferred","https://www.golf.org.au/"],
-[23,"2026-12-05","13th Beach Golf Links","Beach Course","Barwon Heads","Bellarine Return","Victoria","Proposed","","https://13thbeachgolf.com/explore-our-courses/the-beach-course/"],
-[24,"2026-12-06","Barwon Heads Golf Club","Links Course","Barwon Heads","Bellarine Return","Victoria","Proposed","","https://www.barwonheads.golf/cms/green-fee-booking-enquiry/"],
-[25,"2027-01-09","Brighton Golf Course","Public Course","Brighton East","Melbourne South","Victoria","Proposed","","https://brightongolfcourse.com.au/"],
-[26,"2027-01-10","Sandy Golf Links","Public Course","Sandringham","Melbourne Sandbelt","Victoria","Proposed","","https://sandringham.golf/"],
-[27,"2027-01-16","Werribee Park Golf Club","Main Course","Werribee South","Melbourne West","Victoria","Proposed","","https://www.werribeeparkgolf.com.au/cms/golf-course/green-fees/"],
-[28,"2027-01-17","Mt Derrimut Golf & Community Club","Main Course","Derrimut","Melbourne West","Victoria","Proposed","","https://mtderrimut.com.au/cms/"],
-[29,"2027-01-30","Eynesbury Golf","Main Course","Eynesbury","Melbourne West","Victoria","Proposed","","https://eynesburygolf.com.au/"],
-[30,"2027-02-06","Flinders Golf Club","Main Course","Flinders","Mornington Peninsula","Victoria","Proposed","","https://www.flindersgolfclub.com.au/"],
-[31,"2027-02-07","Portsea Golf Club","Main Course","Portsea","Mornington Peninsula","Victoria","Proposed","","https://www.portseagolf.com.au/"],
-[32,"2027-03-04","Black Bull Golf Course","Main Course","Yarrawonga","Murray Border Trip","Victoria","Locked","","https://www.blackbullgolf.com.au/"],
-[33,"2027-03-05","Yarrawonga Mulwala Golf Club Resort","Murray Course","Mulwala","Murray Border Trip","NSW","Locked","","https://www.yarragolf.com.au/"],
-[34,"2027-03-06","Cobram Barooga Golf Club","Old Course","Barooga","Murray Border Trip","NSW","Locked","","https://www.cbgc.com.au/"],
-[35,"2027-03-07","Cobram Barooga Golf Club","West Course","Barooga","Murray Border Trip","NSW","Locked","","https://www.cbgc.com.au/"],
-[36,"2027-03-13","Ivanhoe Golf Course","Public Course","Ivanhoe","Melbourne North-East","Victoria","Proposed","","https://www.ivanhoegolfcourse.com.au/"],
-[37,"2027-03-14","Ringwood Golf","Public Course","Ringwood","Melbourne East","Victoria","Proposed","","https://www.maroondah.vic.gov.au/Explore/Sports-clubs-and-recreation-facilities/Golf-courses"],
-[38,"2027-03-20","Morack Public Golf","Public Course","Vermont South","Melbourne East","Victoria","Proposed","","https://www.whitehorse.vic.gov.au/things-do/sports-facilities/morack-public-golf"],
-[39,"2027-03-21","Growling Frog Golf Course","Main Course","Yan Yean","Melbourne North","Victoria","Proposed","","https://growlingfroggolf.com.au/"],
-[40,"2027-04-10","Club Mandalay","Main Course","Beveridge","Melbourne North","Victoria","Proposed","","https://www.clubmandalay.com.au/"],
-[41,"2027-04-11","Gardiners Run Golf Course","Main Course","Lilydale","Melbourne East","Victoria","Proposed","","https://www.gardinersrun.com.au/cms/golf/our-course/"],
-[42,"2027-04-17","Sandhurst Club","Champions Course","Sandhurst","Melbourne South-East","Victoria","Proposed","","https://www.sandhurst.com/play-golf"],
-[43,"2027-04-18","Sandhurst Club","North Course","Sandhurst","Melbourne South-East","Victoria","Proposed","","https://www.sandhurst.com/play-golf"],
-[44,"2027-05-15","The Sands Torquay","Championship Course","Torquay","Surf Coast","Victoria","Proposed","","https://thesandstorquay.com/golf/"],
-[45,"2027-05-16","Anglesea Golf Club","Main Course","Anglesea","Surf Coast","Victoria","Proposed","","https://www.angleseagolfclub.com.au/"],
-[46,"2027-06-12","Ballarat Golf Club","Main Course","Ballarat","Central Highlands","Victoria","Proposed","","https://www.ballaratgolfclub.com.au/"],
-[47,"2027-07-24","Barnbougle","The Dunes","Bridport","Tasmania","Tasmania","Proposed","","https://barnbougle.com.au/"],
-[48,"2027-07-25","Barnbougle","Lost Farm","Bridport","Tasmania","Tasmania","Proposed","","https://barnbougle.com.au/play/lost-farm/"],
-[49,"2027-08-20","Ocean Dunes","Links Course","King Island","King Island","Tasmania","Proposed","","https://oceandunes.com.au/"],
-[50,"2027-08-21","Cape Wickham Golf Links","Links Course","King Island","King Island","Tasmania","Proposed","","https://capewickham.com.au/"]
+[1, "2026-08-02", "Kooringal Golf Club", "Main Course", "Altona", "Melbourne West", "Victoria", "Locked", "", true, "https://www.golf.org.au/"],
+[2, "2026-08-08", "Altona Lakes Golf Course", "Public Course", "Altona", "Melbourne West", "Victoria", "Locked", "", true, "https://www.golf.org.au/"],
+[3, "2026-08-28", "Gleneagles", "The King's Course", "Auchterarder", "Scotland Opening", "Scotland, UK", "Locked", "", false, "https://gleneagles.com/golf/the-kings/"],
+[4, "2026-08-29", "Gleneagles", "The Queen's Course", "Auchterarder", "Scotland Opening", "Scotland, UK", "Locked", "", false, "https://gleneagles.com/golf/the-queens/"],
+[5, "2026-08-30", "Gleneagles", "PGA Centenary Course", "Auchterarder", "Scotland Opening", "Scotland, UK", "Locked", "", false, "https://gleneagles.com/golf/the-pga-centenary/"],
+[6, "2026-09-20", "Waterford Valley Golf", "Championship Course", "Knoxfield", "Melbourne East", "Victoria", "Locked", "", false, "https://www.wvgolf.com.au/"],
+[7, "2026-09-26", "Sanctuary Lakes Golf Club", "Greg Norman Course", "Point Cook", "Melbourne West", "Victoria", "Proposed", "", false, "https://www.sanctuarylakesclub.com.au/"],
+[8, "2026-10-01", "Mt Beauty Golf Club", "Main Course", "Mount Beauty", "Bright Week", "Victoria", "Locked", "Bright week", false, "https://www.golf.org.au/"],
+[9, "2026-10-02", "Myrtleford Golf Club", "Main Course", "Myrtleford", "Bright Week", "Victoria", "Locked", "Bright week", false, "https://www.golf.org.au/"],
+[10, "2026-10-03", "Bright Country Golf Club", "Main Course", "Porepunkah / Bright", "Bright Week", "Victoria", "Locked", "Bright week", false, "https://www.brightgolf.org.au/"],
+[11, "2026-10-08", "Metropolitan Golf Club", "Championship Course", "Oakleigh South", "Melbourne Sandbelt", "Victoria", "Locked", "", false, "https://www.metropolitangolf.com.au/"],
+[12, "2026-10-10", "Yarra Bend Golf", "Public Course", "Fairfield", "Melbourne Inner", "Victoria", "Proposed", "", false, "https://yarrabendgolf.com/"],
+[13, "2026-10-11", "Albert Park Golf Course", "Public Course", "Albert Park", "Melbourne Inner", "Victoria", "Proposed", "", false, "https://www.albertparkgolf.com.au/"],
+[14, "2026-10-22", "Lonsdale Links", "Main Course", "Point Lonsdale", "Bellarine Weekender", "Victoria", "Locked", "Stableford", false, "https://www.lonsdalelinks.com.au/cms/golf/green-fees/"],
+[15, "2026-10-23", "Portarlington Golf Club", "Main Course", "Portarlington", "Bellarine Weekender", "Victoria", "Locked", "Ambrose", false, "https://www.port.golf/play"],
+[16, "2026-10-24", "13th Beach Golf Links", "Creek Course", "Barwon Heads", "Bellarine Weekender", "Victoria", "Locked", "Stroke · Round 1", false, "https://13thbeachgolf.com/explore-our-courses/the-creek-course/"],
+[17, "2026-10-25", "Curlewis Golf Club", "Main Course", "Curlewis", "Bellarine Weekender", "Victoria", "Locked", "Stroke · Round 2", false, "https://curlewisgolf.com.au/pages/green-fees"],
+[18, "2026-11-07", "St Andrews Beach Golf Course", "Main Course", "St Andrews Beach", "Mornington Peninsula", "Victoria", "Proposed", "", false, "https://standrewsbeachgolf.com.au/"],
+[19, "2026-11-08", "The Dunes Golf Links", "Dunes Course", "Rye", "Mornington Peninsula", "Victoria", "Proposed", "", false, "https://thedunes.com.au/"],
+[20, "2026-11-14", "Moonah Links", "Open Course", "Fingal", "Mornington Peninsula", "Victoria", "Proposed", "", false, "https://www.moonahlinks.com.au/"],
+[21, "2026-11-15", "Moonah Links", "Legends Course", "Fingal", "Mornington Peninsula", "Victoria", "Proposed", "", false, "https://www.moonahlinks.com.au/"],
+[22, "2026-11-20", "Wangaratta Golf Club", "Main Course", "Wangaratta", "Albury Border Trip", "Victoria", "Proposed", "", false, "https://www.golf.org.au/"],
+[23, "2026-11-21", "Thurgoona Country Club Resort", "Main Course", "Thurgoona", "Albury Border Trip", "NSW", "Proposed", "", false, "https://www.golf.org.au/"],
+[24, "2026-11-22", "Corowa Golf Club", "Main Course", "Corowa", "Albury Border Trip", "NSW", "Proposed", "3rd Albury course — swap if preferred", false, "https://www.golf.org.au/"],
+[25, "2026-12-05", "13th Beach Golf Links", "Beach Course", "Barwon Heads", "Bellarine Return", "Victoria", "Proposed", "", false, "https://13thbeachgolf.com/explore-our-courses/the-beach-course/"],
+[26, "2026-12-06", "Barwon Heads Golf Club", "Links Course", "Barwon Heads", "Bellarine Return", "Victoria", "Proposed", "", false, "https://www.barwonheads.golf/cms/green-fee-booking-enquiry/"],
+[27, "2027-01-09", "Brighton Golf Course", "Public Course", "Brighton East", "Melbourne South", "Victoria", "Proposed", "", false, "https://brightongolfcourse.com.au/"],
+[28, "2027-01-10", "Sandy Golf Links", "Public Course", "Sandringham", "Melbourne Sandbelt", "Victoria", "Proposed", "", false, "https://sandringham.golf/"],
+[29, "2027-01-16", "Werribee Park Golf Club", "Main Course", "Werribee South", "Melbourne West", "Victoria", "Proposed", "", false, "https://www.werribeeparkgolf.com.au/cms/golf-course/green-fees/"],
+[30, "2027-01-17", "Mt Derrimut Golf & Community Club", "Main Course", "Derrimut", "Melbourne West", "Victoria", "Proposed", "", false, "https://mtderrimut.com.au/cms/"],
+[31, "2027-01-30", "Eynesbury Golf", "Main Course", "Eynesbury", "Melbourne West", "Victoria", "Proposed", "", false, "https://eynesburygolf.com.au/"],
+[32, "2027-02-06", "Flinders Golf Club", "Main Course", "Flinders", "Mornington Peninsula", "Victoria", "Proposed", "", false, "https://www.flindersgolfclub.com.au/"],
+[33, "2027-02-07", "Portsea Golf Club", "Main Course", "Portsea", "Mornington Peninsula", "Victoria", "Proposed", "", false, "https://www.portseagolf.com.au/"],
+[34, "2027-03-04", "Black Bull Golf Course", "Main Course", "Yarrawonga", "Murray Border Trip", "Victoria", "Locked", "", false, "https://www.blackbullgolf.com.au/"],
+[35, "2027-03-05", "Yarrawonga Mulwala Golf Club Resort", "Murray Course", "Mulwala", "Murray Border Trip", "NSW", "Locked", "", false, "https://www.yarragolf.com.au/"],
+[36, "2027-03-06", "Cobram Barooga Golf Club", "Old Course", "Barooga", "Murray Border Trip", "NSW", "Locked", "", false, "https://www.cbgc.com.au/"],
+[37, "2027-03-07", "Cobram Barooga Golf Club", "West Course", "Barooga", "Murray Border Trip", "NSW", "Locked", "", false, "https://www.cbgc.com.au/"],
+[38, "2027-03-13", "Ivanhoe Golf Course", "Public Course", "Ivanhoe", "Melbourne North-East", "Victoria", "Proposed", "", false, "https://www.ivanhoegolfcourse.com.au/"],
+[39, "2027-03-21", "Growling Frog Golf Course", "Main Course", "Yan Yean", "Melbourne North", "Victoria", "Proposed", "", false, "https://growlingfroggolf.com.au/"],
+[40, "2027-04-10", "Club Mandalay", "Main Course", "Beveridge", "Melbourne North", "Victoria", "Proposed", "", false, "https://www.clubmandalay.com.au/"],
+[41, "2027-04-11", "Gardiners Run Golf Course", "Main Course", "Lilydale", "Melbourne East", "Victoria", "Proposed", "", false, "https://www.gardinersrun.com.au/cms/golf/our-course/"],
+[42, "2027-04-17", "Sandhurst Club", "Champions Course", "Sandhurst", "Melbourne South-East", "Victoria", "Proposed", "", false, "https://www.sandhurst.com/play-golf"],
+[43, "2027-04-18", "Sandhurst Club", "North Course", "Sandhurst", "Melbourne South-East", "Victoria", "Proposed", "", false, "https://www.sandhurst.com/play-golf"],
+[44, "2027-05-15", "The Sands Torquay", "Championship Course", "Torquay", "Surf Coast", "Victoria", "Proposed", "", false, "https://thesandstorquay.com/golf/"],
+[45, "2027-05-16", "Anglesea Golf Club", "Main Course", "Anglesea", "Surf Coast", "Victoria", "Proposed", "", false, "https://www.angleseagolfclub.com.au/"],
+[46, "2027-06-12", "Ballarat Golf Club", "Main Course", "Ballarat", "Central Highlands", "Victoria", "Proposed", "", false, "https://www.ballaratgolfclub.com.au/"],
+[47, "2027-07-24", "Barnbougle", "The Dunes", "Bridport", "Tasmania", "Tasmania", "Proposed", "", false, "https://barnbougle.com.au/"],
+[48, "2027-07-25", "Barnbougle", "Lost Farm", "Bridport", "Tasmania", "Tasmania", "Proposed", "", false, "https://barnbougle.com.au/play/lost-farm/"],
+[49, "2027-07-30", "Ocean Dunes", "Links Course", "King Island", "King Island", "Tasmania", "Proposed", "", false, "https://oceandunes.com.au/"],
+[50, "2027-07-31", "Cape Wickham Golf Links", "Links Course", "King Island", "King Island", "Tasmania", "Proposed", "", false, "https://capewickham.com.au/"]
 ];
 
 function fd(iso){
@@ -646,7 +713,7 @@ function render(){
   Object.keys(CLUB_SEEN).forEach(k=>delete CLUB_SEEN[k]);
   let n=0;
   C.forEach(c=>{
-    const [no,date,course,layout,town,region,state,status,note,url]=c;
+    const [no,date,course,layout,town,region,state,status,note,played,url]=c;
     if(filter!=='All' && status!==filter) return;
     const hay=(course+" "+layout+" "+town+" "+region+" "+state+" "+note).toLowerCase();
     if(q && !hay.includes(q)) return;
@@ -656,14 +723,14 @@ function render(){
     const idx = CLUB_SEEN[course];
     const a=document.createElement('a');
     a.className='row'; a.href=url; a.target='_blank'; a.rel='noopener';
-    if(c[11]) a.classList.add('played');
-    a.innerHTML=`<span class="tick ${c[11]?'on':''}" role="checkbox" aria-checked="${!!c[11]}" tabindex="0" data-play="${c[0]}" title="Mark as played">✓</span>
-      <div class="no">${String(c[10]||no).padStart(2,'0')}</div>
+    if(c[9]) a.classList.add('played');
+    a.innerHTML=`<span class="tick ${c[9]?'on':''}" role="checkbox" aria-checked="${!!c[9]}" tabindex="0" data-play="${c[0]}" title="Mark as played">✓</span>
+      <div class="no">${String(c[11]||no).padStart(2,'0')}</div>
       <div><div class="cn">${multi ? course+' <span class="sep">·</span> '+layout : course}</div>
         <div class="ly">${multi ? '<span class="tag">Course '+idx+' of '+CLUB_N[course]+'</span>' : layout}${note?' · <b style="color:#F2C563">'+note+'</b>':''}</div></div>
       <div class="loc">${town}<span>${region}</span></div>
       <div class="dt">${fd(date)}</div>
-      <div class="badge ${c[11]?'Played':status}">${c[11]?'Played':status}</div>
+      <div class="badge ${c[9]?'Played':status}">${c[9]?'Played':status}</div>
       <span class="delrow" role="button" tabindex="0" data-del="${c[0]}" title="Remove round">×</span>`;
     listEl.appendChild(a);
   });
@@ -696,7 +763,7 @@ function renderCal(){
 
   // every month from Aug 2026 to Aug 2027
   let y=2026, m=7;
-  for(let i=0;i<13;i++){
+  for(let i=0;i<12;i++){
     const first = new Date(y,m,1);
     const days = new Date(y,m+1,0).getDate();
     let lead = (first.getDay()+6)%7; // Monday-first
@@ -715,9 +782,9 @@ function renderCal(){
       const iso = y+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
       const hit = byDate[iso];
       if(hit){
-        const st = hit[0][11] ? 'played' : (hit[0][7]==='Locked' ? 'locked' : 'proposed');
-        const mv = hit[0][1]!==ORIG[hit[0][0]] ? ' moved' : '';
-        cells += '<a class="cell has '+st+mv+'" data-iso="'+iso+'" data-no="'+hit[0][0]+'" href="'+hit[0][9]+'" target="_blank" rel="noopener" title="'+hit[0][2]+'">'
+        const st = hit[0][9] ? 'played' : (hit[0][7]==='Locked' ? 'locked' : 'proposed');
+        const mv = (hit[0][1]!==ORIG[hit[0][0]] ? ' moved' : '') + (outsideWindow(iso) ? ' outside' : '');
+        cells += '<a class="cell has '+st+mv+'" data-iso="'+iso+'" data-no="'+hit[0][0]+'" href="'+hit[0][10]+'" target="_blank" rel="noopener" title="'+hit[0][2]+'">'
                + '<span class="dnum">'+d+'</span><span class="pip"></span></a>';
       } else {
         cells += '<div class="cell" data-iso="'+iso+'">'+d+'</div>';
@@ -728,10 +795,10 @@ function renderCal(){
     if(inMonth.length){
       list = '<div class="mlist">' + inMonth.map(r=>{
         const dd = new Date(r[1]+"T00:00:00");
-        const st = r[11] ? 'played' : (r[7]==='Locked' ? 'locked' : 'proposed');
+        const st = r[9] ? 'played' : (r[7]==='Locked' ? 'locked' : 'proposed');
         const nm = CLUB_N[r[2]]>1 ? r[2]+' · '+r[3] : r[2];
-        return '<a href="'+r[9]+'" target="_blank" rel="noopener">'
-             + '<span class="tick '+(r[11]?'on':'')+'" role="checkbox" tabindex="0" data-play="'+r[0]+'" title="Mark as played">✓</span>'
+        return '<a href="'+r[10]+'" target="_blank" rel="noopener">'
+             + '<span class="tick '+(r[9]?'on':'')+'" role="checkbox" tabindex="0" data-play="'+r[0]+'" title="Mark as played">✓</span>'
              + '<span class="mdot '+st+'"></span>'
              + '<span class="md">'+dd.getDate()+'/'+(dd.getMonth()+1)+'</span>'
              + '<span class="mn">'+nm+'</span>'
@@ -769,9 +836,9 @@ function byNo(no){ return C.find(c=>c[0]===Number(no)); }
 function resequence(){
   C.sort((a,b)=> a[1]<b[1] ? -1 : a[1]>b[1] ? 1 : 0);
   // keep the stable id in slot 0 — renumber a display index instead
-  C.forEach((c,i)=>{ c[10] = i+1; if(c[11]===undefined) c[11] = false; });
+  C.forEach((c,i)=>{ c[11] = i+1; if(c[9]===undefined) c[9] = false; });
 }
-C.forEach((c,i)=>{ c[10] = i+1; if(c[11]===undefined) c[11] = false; });
+C.forEach((c,i)=>{ c[11] = i+1; if(c[9]===undefined) c[9] = false; });
 
 function applyMove(no, targetIso){
   const src = byNo(no);
@@ -793,6 +860,7 @@ function applyMove(no, targetIso){
     ? src[2]+' ⇄ '+occupant[2]+'  ('+nice(fromIso)+' ↔ '+nice(targetIso)+')'
     : src[2]+' → '+nice(targetIso);
   if(wasLocked) msg += '  ·  heads up: that was a LOCKED round';
+  if(outsideWindow(targetIso)) msg += '  ·  WARNING: outside the 12 months';
   toast(msg);
 }
 
@@ -879,9 +947,9 @@ calEl.addEventListener('click', e => {
 function togglePlayed(no){
   const row = C.find(c=>c[0]===Number(no));
   if(!row) return;
-  row[11] = !row[11];
+  row[9] = !row[9];
   draw(); refreshStats();
-  toast(row[11] ? 'Played: '+row[2] : 'Unmarked: '+row[2]);
+  toast(row[9] ? 'Played: '+row[2] : 'Unmarked: '+row[2]);
 }
 document.addEventListener('click', e => {
   const t = e.target.closest('[data-play]');
@@ -914,7 +982,7 @@ document.getElementById('btn-export').addEventListener('click', ()=>{
   const head = ['No','Date','Club','Course','Town','Region','State','Status','Note','Moved','Played'];
   const lines = [head.join(',')].concat(C.map(c=>{
     const moved = c[1]!==ORIG[c[0]] ? 'YES' : '';
-    return [c[10], c[1], c[2], c[3], c[4], c[5], c[6], c[7], c[8], moved, c[11]?'YES':'']
+    return [c[11], c[1], c[2], c[3], c[4], c[5], c[6], c[7], c[8], moved, c[9]?'YES':'']
       .map(v => '"'+String(v).replace(/"/g,'""')+'"').join(',');
   }));
   const blob = new Blob([lines.join('\n')], {type:'text/csv'});
@@ -929,6 +997,9 @@ document.getElementById('btn-export').addEventListener('click', ()=>{
 
 // ---------- ADD / REMOVE ROUNDS ----------
 const TARGET = 50;
+const WIN_START = '2026-08-01';
+const WIN_END   = '2027-07-31';
+const outsideWindow = iso => iso < WIN_START || iso > WIN_END;
 const panel = document.getElementById('panel');
 const errEl = document.getElementById('f-err');
 const F = id => document.getElementById(id);
@@ -959,6 +1030,10 @@ document.getElementById('f-save').addEventListener('click', ()=>{
   const club = F('f-club').value.trim();
   if(!date || !club){ errEl.textContent = 'Date and club are both required.'; return; }
 
+  if(outsideWindow(date)){
+    errEl.textContent = 'That date falls outside the 12 months (1 Aug 2026 – 31 Jul 2027).';
+    return;
+  }
   const clash = C.find(c => c[1] === date);
   if(clash){
     errEl.textContent = 'You already have ' + clash[2] + ' on that date — pick another day, or drag it in the calendar first.';
@@ -973,6 +1048,7 @@ document.getElementById('f-save').addEventListener('click', ()=>{
     F('f-state').value.trim() || 'Victoria',
     F('f-status').value,
     F('f-note').value.trim(),
+    false,
     F('f-url').value.trim() || '#' ];
   C.push(row);
   ORIG[no] = date;                       // added rounds count as their own baseline
@@ -1025,9 +1101,9 @@ document.addEventListener('keydown', e => {
 
 function refreshStats(){
   const total  = C.length;
-  const played = C.filter(c=>c[11]).length;
-  const locked = C.filter(c=>c[7]==='Locked' && !c[11]).length;
-  const prop   = C.filter(c=>c[7]==='Proposed' && !c[11]).length;
+  const played = C.filter(c=>c[9]).length;
+  const locked = C.filter(c=>c[7]==='Locked' && !c[9]).length;
+  const prop   = C.filter(c=>c[7]==='Proposed' && !c[9]).length;
 
   F('s-done').textContent   = played;
   F('s-locked').textContent = locked;
@@ -1041,6 +1117,133 @@ function refreshStats(){
   F('over-tag').textContent = diff === 0 ? ''
     : (diff > 0 ? '  ·  ' + diff + ' over target' : '  ·  ' + (-diff) + ' short of target');
 }
+
+
+// ---------- NEARBY COURSE MAP ----------
+// [name, lat, lng, access, onList]
+const NEAR = [
+["Kooringal Golf Club",-37.874227,144.811802,"Public",1],
+["Altona Lakes Golf Course",-37.842519,144.858795,"Public",1],
+["Medway Golf Club",-37.775338,144.868283,"Private",0],
+["Riverside Golf, Ascot Vale",-37.776862,144.900846,"Public",0],
+["Royal Park Golf Course",-37.781934,144.956301,"Public",0],
+["Keilor Public Golf Course",-37.686007,144.795457,"Public",0],
+["Sanctuary Lakes Golf Club",-37.895954,144.762627,"Public",1],
+["Werribee Park Golf Club",-37.937778,144.670833,"Public",1],
+["Mt Derrimut Golf Club",-37.794921,144.775940,"Public",1],
+["Eynesbury Golf Course",-37.790412,144.566378,"Public",1],
+["Yarra Bend Golf",-37.796865,145.011777,"Public",1],
+["Albert Park Golf Course",-37.848186,144.976590,"Public",1],
+["Northern Golf Club",-37.706991,144.929355,"Private",0],
+["Ivanhoe Public Golf Course",-37.780192,145.055765,"Public",1],
+["Royal Melbourne Golf Club",-37.969604,145.030974,"Private",0],
+["Kingston Heath Golf Club",-37.955179,145.085851,"Private",0],
+["Victoria Golf Club",-37.966679,145.045135,"Private",0],
+["Metropolitan Golf Club",-37.911924,145.090177,"Private",1],
+["Commonwealth Golf Club",-37.930016,145.086456,"Private",0],
+["Huntingdale Golf Club",-37.917346,145.098689,"Private",0],
+["Yarra Yarra Golf Club",-37.931461,145.075500,"Private",0],
+["Woodlands Golf Club",-37.999596,145.098206,"Private",0],
+["Spring Valley Golf Club",-37.953219,145.128521,"Private",0],
+["Sandy Golf Links",-37.967348,145.031236,"Public",1],
+["Brighton Public Golf Course",-37.923846,145.017504,"Public",1],
+["Malvern Valley Public",-37.876037,145.077977,"Public",0],
+["Waterford Valley Golf",-37.902367,145.260788,"Public",1],
+["Morack Public Golf",-37.850613,145.204664,"Public",0],
+["Glen Waverley Sports Hub",-37.888952,145.193785,"Public",0],
+["Rowville Lakes Golf",-37.942008,145.229560,"Public",0],
+["Eastwood Golf Club",-37.835730,145.315259,"Private",0],
+["Gardiners Run Golf Course",-37.734647,145.352602,"Public",1],
+["Yering Meadows Golf Club",-37.693985,145.353561,"Public",0],
+["The Eastern Golf Club",-37.696678,145.332855,"Private",0],
+["The Heritage Golf & CC",-37.718949,145.298586,"Public",0],
+["Growling Frog Golf Course",-37.558571,145.088529,"Public",0],
+["Mandalay Golf Course",-37.471970,144.953051,"Public",1],
+["Hidden Valley Resort",-37.395225,144.993942,"Public",0],
+["Sandhurst Club",-38.078645,145.210624,"Public",1],
+["Settlers Run Golf & CC",-38.131757,145.252579,"Public",0],
+["Eastern Sward Golf Club",-38.064495,145.180496,"Public",0],
+["Peninsula Kingswood",-38.131654,145.157360,"Private",0],
+["St Andrews Beach Golf",-38.423472,144.850466,"Public",1],
+["The Dunes Golf Links",-38.380000,144.833000,"Public",1],
+["Moonah Links",-38.418000,144.882000,"Public",1],
+["Flinders Golf Club",-38.474000,145.021000,"Public",1],
+["Portsea Golf Club",-38.328000,144.712000,"Public",1],
+["13th Beach Golf Links",-38.277899,144.457742,"Public",1],
+["The Barwon Heads Golf Club",-38.285086,144.486372,"Private",1],
+["Curlewis Golf Club",-38.182189,144.534481,"Public",1],
+["Portarlington Golf Club",-38.123613,144.670090,"Public",1],
+["Lonsdale Links",-38.278783,144.602417,"Public",1],
+["Clifton Springs Golf Club",-38.154037,144.563889,"Public",0],
+["Barwon Valley Golf Club",-38.175165,144.356261,"Public",0],
+["East Geelong Golf Club",-38.149168,144.384030,"Public",0],
+["Ocean Grove Golf Course",-38.263037,144.509842,"Public",0],
+["The Sands Torquay",-38.313511,144.346954,"Public",1],
+["RACV Torquay Golf",-38.340508,144.311526,"Public",0],
+["Anglesea Golf Club",-38.406027,144.171027,"Public",1]
+];
+const NEWPORT = [-37.8430, 144.8830];
+
+let map, layer, mapFilter = 'All';
+
+function drawMarkers(){
+  if(!layer) return;
+  layer.clearLayers();
+  NEAR.forEach(p => {
+    const [nm, lat, lng, access, on50] = p;
+    if(mapFilter === 'Public'  && access !== 'Public')  return;
+    if(mapFilter === 'Private' && access !== 'Private') return;
+    if(mapFilter === 'On50'    && !on50) return;
+
+    const fill   = on50 ? '#F7F3E6' : (access === 'Public' ? '#D9FF5C' : '#3A2E14');
+    const stroke = on50 ? '#D9FF5C' : (access === 'Public' ? '#7FA82E' : '#8A6C2A');
+
+    L.circleMarker([lat,lng], {
+      radius: on50 ? 8 : 6, fillColor: fill, color: stroke,
+      weight: 2, opacity: 1, fillOpacity: 0.92
+    }).bindPopup(
+      '<b>'+nm+'</b>'
+      + '<span class="acc '+(access==='Public'?'pub':'priv')+'">'
+      + (access==='Public' ? 'Public access' : 'Private club') + '</span>'
+      + (on50 ? '<span class="on50">On the 50</span>' : '')
+    ).addTo(layer);
+  });
+}
+
+function initMap(){
+  if(typeof L === 'undefined'){
+    document.getElementById('map').innerHTML =
+      '<div class="mapfail">Map needs an internet connection to load.</div>';
+    return;
+  }
+  map = L.map('map', { scrollWheelZoom:false }).setView([-38.00, 144.90], 9);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    attribution:'&copy; OpenStreetMap, &copy; CARTO', maxZoom:19
+  }).addTo(map);
+
+  layer = L.layerGroup().addTo(map);
+
+  // home marker
+  L.circleMarker(NEWPORT, {
+    radius:7, fillColor:'#F2C563', color:'#07190F', weight:3, fillOpacity:1
+  }).bindPopup('<b>Newport</b><span class="on50">Home</span>').addTo(map);
+  L.circle(NEWPORT, {
+    radius:100000, color:'#F2C563', weight:1, opacity:0.45,
+    fillColor:'#F2C563', fillOpacity:0.04, dashArray:'5,7'
+  }).addTo(map);
+
+  drawMarkers();
+  setTimeout(()=>map.invalidateSize(), 250);
+}
+
+document.querySelectorAll('[data-mf]').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('[data-mf]').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on');
+    mapFilter = b.dataset.mf;
+    drawMarkers();
+  });
+});
 
 function setView(v){
   view=v;
@@ -1070,11 +1273,14 @@ render();
 
 refreshStats();
 
-const start=new Date("2026-08-28T00:00:00"), fin=new Date("2027-08-27T00:00:00"), now=new Date(), DAY=86400000;
+const start=new Date("2026-08-01T00:00:00"), fin=new Date("2027-07-31T00:00:00"), now=new Date(), DAY=86400000;
 const kEl=document.getElementById('cd-k'), vEl=document.getElementById('cd-v');
 if(now<start){ kEl.textContent='Days To Kick-Off'; vEl.textContent=Math.ceil((start-now)/DAY); }
 else if(now<=fin){ kEl.textContent='Days Remaining'; vEl.textContent=Math.ceil((fin-now)/DAY); }
 else { kEl.textContent='Status'; vEl.textContent='Complete'; }
 </script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"
+        onload="initMap()"
+        onerror="document.getElementById('map').innerHTML='<div class=\'mapfail\'>Map needs an internet connection to load.</div>'"></script>
 </body>
 </html>
